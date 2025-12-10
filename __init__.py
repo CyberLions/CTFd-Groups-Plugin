@@ -1,6 +1,7 @@
 from flask import request, jsonify
 from CTFd.utils.modes import TEAMS_MODE
 from CTFd.models import Users, Teams
+from CTFd.utils.user import get_current_user
 from CTFd import utils
 
 def load(app):
@@ -101,7 +102,7 @@ def load(app):
         json_payload = request.get_json(silent=True) or {}
         debug(f"Form keys: {list(form.keys())}; JSON keys: {list(json_payload.keys())}")
 
-        user = utils.get_current_user()
+        user = get_current_user()
         user_display = getattr(user, "name", None) or getattr(user, "username", None) or "unknown"
         debug(f"Current user: {user_display}")
 
