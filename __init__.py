@@ -192,7 +192,7 @@ def load(app):
                 return jsonify({
                     "success": False,
                     "message": (
-                        f"🛑 JOIN BLOCKED — Team '{getattr(team,'name','<unknown>')}' is full for bracket '{bracket}'. "
+                        f"JOIN BLOCKED Team '{getattr(team,'name','<unknown>')}' is full for bracket '{bracket}'. "
                         f"Limit: {limit} members. Current: {member_count}."
                     )
                 }), 400
