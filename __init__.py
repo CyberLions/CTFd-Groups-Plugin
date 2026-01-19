@@ -1,6 +1,6 @@
 from flask import request, jsonify, abort
 from CTFd.utils.modes import TEAMS_MODE
-from CTFd.models import Users, Teams, ScoreboardBrackets
+from CTFd.models import Users, Teams, Brackets
 from CTFd.utils.user import get_current_user
 from CTFd import utils
 
@@ -105,7 +105,7 @@ def load(app):
 
             bracket_name = None
             if bracket_id and str(bracket_id).isdigit():
-                bracket_obj = ScoreboardBrackets.query.filter_by(id=int(bracket_id)).first()
+                bracket_obj = Brackets.query.filter_by(id=int(bracket_id)).first()
                 if bracket_obj:
                     bracket_name = bracket_obj.name
 
