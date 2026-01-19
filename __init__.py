@@ -1,6 +1,6 @@
 from flask import request, jsonify, abort
 from CTFd.utils.modes import TEAMS_MODE
-from CTFd.models import Users, Teams
+from CTFd.models import Users, Teams, ScoreboardBrackets
 from CTFd.utils.user import get_current_user
 from CTFd import utils
 
@@ -93,23 +93,34 @@ def load(app):
 
 
         # ------------------------------------------
-        # TEAM CREATION: PSU EMAIL ENFORCEMENT
+        # TEAM CREATION: PSU EMAIL ENFORCEMENT (FIXED)
         # ------------------------------------------
         if endpoint == "teams.new" and request.method == "POST":
 
-            bracket_val = None
-            for key in ("bracket", "bracket_id", "scoreboard_bracket", "scoreboard_bracket_id"):
+            bracket_id = None
+            for key in ("bracket_id", "scoreboard_bracket_id"):
                 if key in form and form.get(key):
-                    bracket_val = form.get(key)
+                    bracket_id = form.get(key)
                     break
 
-            debug(f"Team creation requested by '{user_display}'. Bracket choice (form) = {bracket_val}")
+            bracket_name = None
+            if bracket_id and str(bracket_id).isdigit():
+                bracket_obj = ScoreboardBrackets.query.filter_by(id=int(bracket_id)).first()
+                if bracket_obj:
+                    bracket_name = bracket_obj.name
+
+            debug(
+                f"Team creation requested by '{user_display}'. "
+                f"Bracket resolved = {bracket_name}"
+            )
 
             # ---- ENFORCE PSU EMAIL IF BRACKET = PSU ----
-            if bracket_val and str(bracket_val).strip() == "PSU":
-                if not email_is_psu(user):
-                    debug("DENY team creation: PSU bracket requires @psu.edu email")
-                    abort(400, description="PSU teams require members with @psu.edu email addresses.")
+            if bracket_name == "PSU" and not email_is_psu(user):
+                debug("DENY team creation: PSU bracket requires @psu.edu email")
+                abort(
+                    403,
+                    description="PSU teams require members with @psu.edu email addresses."
+                )
 
             return
 
@@ -156,7 +167,7 @@ def load(app):
             # ---- PSU EMAIL CHECK FOR JOIN ----
             if bracket == "PSU":
                 if not email_is_psu(user):
-                    debug(f"DENY join: PSU bracket requires @psu.edu email")
+                    debug("DENY join: PSU bracket requires @psu.edu email")
                     return jsonify({
                         "success": False,
                         "message": "Only @psu.edu emails may join PSU teams."
